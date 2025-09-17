@@ -166,3 +166,63 @@ EmbeddingGemma と Qwen3 による類似度は以下の通り
 *   次元数とベクトル要素の精度が異なる
     *   EmbeddingGemma 768 (float32) (3072 bytes) : ベクトルサイズは 128,256,512,768 で可変
     *   Qwen3-Embedding 1024 (float32) (4096 bytes) : モデルの重みは BF16 なので実は半分でも良いのでは?
+
+### プロンプトによる指示
+
+プロンプトprefixで、タスク毎に最適な embeddings を得られる。
+例:
+
+*   `task: search result | query: {content}`
+*   `title: {title | "none"} | text: {content}`
+*   `task: question answering | query: {content}`
+*   `task: fact checking | query: {content}`
+*   `task: classification | query: {content}`
+*   `task: task: clustering | query: {content}`
+*   `task: sentence similarity | query: {content}`
+*   `task: code retrieval | query: {content}`
+
+デフォルトは `search result` タスク
+
+### 疑問点
+
+*   より長いテキストはどう食わせる?
+
+    たぶんなんか良い、一般的な方法がある
+
+*   学習(finetune)はどうやる?
+
+    入力と学習に使う差分量の計算がわからない
+
+### 学習(Finetune)はどうやるの?
+
+[EmbeddingGemma をファインチューニングする](https://ai.google.dev/gemma/docs/embeddinggemma/fine-tuning-embeddinggemma-with-sentence-transformers?hl=ja)
+
+> (アンカー、ポジティブ、ネガティブ) の 3 つ組として構造化されます
+
+> EmbeddingGemma で最適なエンベディングを生成するには、入力テキストの先頭に「指示プロンプト」または「タスク」を追加する必要があります。文の類似性には STS を使用します。
+
+ここでいう `STS` は `sentence similarity` だと推測される。
+
+```
+def get_scores(query, documents):
+  # Calculate embeddings by calling model.encode()
+  query_embeddings = model.encode(query, prompt=task_name)
+  doc_embeddings = model.encode(documents, prompt=task_name)
+
+  # Calculate the embedding similarities
+  similarities = model.similarity(query_embeddings, doc_embeddings)
+```
+
+`model.encode_document` と `mode.encode(..., prompt=task_name)` は別物であることに注意が必要
+
+> If you are unsure whether you should use encode(), encode_query(), or
+> encode_document(), your best bet is to use encode_query() and
+> encode_document() for Information Retrieval tasks with clear query and
+> document/passage distinction, and use encode() for all other tasks.
+
+from: <https://sbert.net/docs/package_reference/sentence_transformer/SentenceTransformer.html>
+
+`encode_query` と `encode_document` を使い分けたほうが良い、と
+
+`SentenceTransformerTrainingArguments` と `SentenceTransformerTrainer` で学習
+
