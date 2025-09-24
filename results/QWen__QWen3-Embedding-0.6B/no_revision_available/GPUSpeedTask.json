@@ -1,0 +1,45 @@
+{
+  "dataset_revision": "1.0",
+  "task_name": "GPUSpeedTask",
+  "mteb_version": "1.36.15",
+  "scores": {
+    "test": [
+      {
+        "time_mean": 1.308184,
+        "time_std": 0.007101,
+        "timings": [
+          1.32517,
+          1.303703,
+          1.307007,
+          1.307175,
+          1.305893,
+          1.305667,
+          1.302672
+        ],
+        "avg_words_per_sec": 2777.132535,
+        "platform": "Windows",
+        "platform_release": "11",
+        "platform_version": "10.0.26100",
+        "architecture": "AMD64",
+        "processor": "Intel64 Family 6 Model 158 Stepping 12, GenuineIntel",
+        "ram": "64 GB",
+        "physical_cores": 8,
+        "total_cores": 16,
+        "num_gpus": 1,
+        "gpu_info": [
+          {
+            "gpu_name": "NVIDIA GeForce RTX 4070",
+            "gpu_total_memory": "11.994140625 GB"
+          }
+        ],
+        "main_score": 2777.132535,
+        "hf_subset": "default",
+        "languages": [
+          "eng-Latn"
+        ]
+      }
+    ]
+  },
+  "evaluation_time": 9.628515005111694,
+  "kg_co2_emissions": null
+}

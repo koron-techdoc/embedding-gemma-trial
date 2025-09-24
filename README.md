@@ -226,3 +226,260 @@ from: <https://sbert.net/docs/package_reference/sentence_transformer/SentenceTra
 
 `SentenceTransformerTrainingArguments` と `SentenceTransformerTrainer` で学習
 
+## Second touch
+
+目標
+
+*   速度ベンチマーク手段を確立
+    *   GPUとCPUの違い
+    *   モデルの違い(候補: QWen3-Embedding-0.6B)
+*   日本語における評価
+    *   JMTEBを検討
+*   実行にかかる各種スペック計測
+    *   メモリ量
+    *   マルチスレッド性能
+    *   速度(上記ベンチマークで対応可能)
+*   MTEBのタスクでやっていることを理解する
+    *   Banking77Classification
+    *   GPUSpeedTask
+    *   CPUSpeedTask
+    *   JSICK
+    *   SICK-R
+    *   JSTS
+    *   STS16
+
+実行環境は例によって i9-9900K + RTX4070 12GB
+
+### pip install
+
+```console
+$ pip install mteb
+$ pip install mteb[speedtask]
+```
+
+### MTEB
+
+<https://github.com/embeddings-benchmark/mteb>
+
+とりあえず一旦 EmbeddedGemma で実行してみる。
+タスクマネージャーを見る限り、GPUで実行されているようだ。
+
+実行するとタスク毎モデル毎に results にファイルが出力される
+
+以下、実行結果。分類タスクの成績も出ているがまずは速度に着目したいので、そこだけ切り抜く。
+
+``` console
+$ mteb run -m 'google/embeddinggemma-300m' -t Banking77Classification --verbosity 3
+...(snipped)...
+[Parallel(n_jobs=-1)]: Using backend LokyBackend with 16 concurrent workers.
+...(snipped)...
+INFO:mteb.evaluation.MTEB:Evaluation for Banking77Classification on test took 66.60 seconds
+```
+
+GPUメモリ使用量は2.3GB
+
+QWen3-Embedding-0.6B でも同じことをする。
+GPUメモリ使用量は4.1GB程度。
+
+```console
+$ mteb run -m 'QWen/QWen3-Embedding-0.6B' -t Banking77Classification --verbosity 3
+
+
+...(snipped)...
+[Parallel(n_jobs=-1)]: Using backend LokyBackend with 16 concurrent workers.
+...(snipped)...
+INFO:mteb.evaluation.MTEB:Evaluation for Banking77Classification on test took 68.01 seconds
+```
+
+実行速度は誤差程度。
+モデルの違いによる実行速度への影響は大きくなさそう。
+
+GPUメモリは実行前に0.6GB使ってる。
+そのため実質の使用量はEG (EmbeddedGemma) が 1.7GB、
+QE (Qwen3 Embedding) が 3.5GB と概算できる。
+重みは QE が EG のほぼ倍なのでそれが反映されていると考えて良さそう。
+
+EGベースで考えると1.7GB/0.3GB なのでおよそ x6 のGPUメモリを使ってそう。
+ログからx16のconcurrencyで動いていると推定される。
+そのx16分のメモリがどう計上されているかは不明。
+
+別のタスクとして SpeedTask カテゴリに CPUSpeedTask と GPUSpeedTask があるので試してみる。
+
+```console
+$ mteb run -m 'google/embeddinggemma-300m' -t GPUSpeedTask --verbosity 2
+...(snipped)...
+INFO:mteb.evaluation.MTEB:Evaluation for GPUSpeedTask on test took 3.79 seconds
+
+$ mteb run -m 'google/embeddinggemma-300m' -t CPUSpeedTask --verbosity 2
+...(snipped)...
+INFO:mteb.evaluation.MTEB:Evaluation for CPUSpeedTask on test took 59.69 seconds
+```
+
+約15.7倍の差が付いた。充分早いとは思うが、GPUを使うべきではある結果。
+
+QE との差もみておく。
+約2.54倍の差が付いた。
+やはりモデルが小さい分、速度は速い用だ。
+QEをCPUで実行するのはやめておくが、予想では2～3分かかりそう。
+
+```
+$ mteb run -m 'QWeb3/QWeb3-Embedding-0.6B' -t GPUSpeedTask --verbosity 2
+...(snipped)...
+INFO:mteb.evaluation.MTEB:Evaluation for GPUSpeedTask on test took 9.63 seconds
+```
+
+### 対日本語
+
+mteb に JSICK 及び JSTS というタスクが含まれる。
+これらの英語版と比べてみよう。
+とりあえず JSICK とその英語版らしき SICK-R を実行。
+SICK-Rのほうが例文数が多いのか、時間がかかる。
+
+```console
+# Windows用Pythonで、UTF-8をデフォルトエンコーディングにする
+$ export PYTHONUTF8=1
+
+$ mteb run -m 'google/embeddinggemma-300m' -t JSICK
+
+$ cat results/google__embeddinggemma-300m/no_revision_available/JSICK.json
+{
+  "dataset_revision": "e4af6c73182bebb41d94cb336846e5a452454ea7",
+  "task_name": "JSICK",
+  "mteb_version": "1.36.15",
+  "scores": {
+    "test": [
+      {
+        "pearson": 0.669638,
+        "spearman": 0.66909,
+        "cosine_pearson": 0.669638,
+        "cosine_spearman": 0.66909,
+        "manhattan_pearson": 0.662281,
+        "manhattan_spearman": 0.669476,
+        "euclidean_pearson": 0.66218,
+        "euclidean_spearman": 0.66909,
+        "main_score": 0.66909,
+        "hf_subset": "default",
+        "languages": [
+          "jpn-Jpan"
+        ]
+      }
+    ]
+  },
+  "evaluation_time": 7.843804121017456,
+  "kg_co2_emissions": null
+}
+
+$ mteb run -m 'google/embeddinggemma-300m' -t SICK-R
+
+$ cat results/google__embeddinggemma-300m/no_revision_available/SICK-R.json
+{
+  "dataset_revision": "20a6d6f312dd54037fe07a32d58e5e168867909d",
+  "task_name": "SICK-R",
+  "mteb_version": "1.36.15",
+  "scores": {
+    "test": [
+      {
+        "pearson": 0.594934,
+        "spearman": 0.570358,
+        "cosine_pearson": 0.594934,
+        "cosine_spearman": 0.570358,
+        "manhattan_pearson": 0.582721,
+        "manhattan_spearman": 0.569466,
+        "euclidean_pearson": 0.583439,
+        "euclidean_spearman": 0.570358,
+        "main_score": 0.570358,
+        "hf_subset": "default",
+        "languages": [
+          "eng-Latn"
+        ]
+      }
+    ]
+  },
+  "evaluation_time": 37.59281349182129,
+  "kg_co2_emissions": null
+}
+```
+
+JSICKのほうが点数が良いが…なんかログからは、
+事前に学習している感じもする。
+ベンチマークの内容を調べる必要もありそう。
+
+念のため QE でも実行しておく。
+
+```console
+$ mteb run -m 'QWen/QWen3-Embedding-0.6B' -t JSICK
+
+$ mteb run -m 'QWen/QWen3-Embedding-0.6B' -t SICK-R
+```
+
+その結果へのリンク。スコアは双方0.8を超え、かなり高い。
+
+* [QE/JSICK result](./results/QWen__QWen3-Embedding-0.6B/no_revision_available/JSICK.json)
+* [QE/SICK-R result](./results/QWen__QWen3-Embedding-0.6B/no_revision_available/SICK-R.json)
+
+次にJSTSを実行してみる。
+
+```console
+$ mteb run -m 'google/embeddinggemma-300m' -t JSTS
+
+$ mteb run -m 'QWen/QWen3-Embedding-0.6B' -t JSTS
+```
+
+が、データセットが消えてて実行できない。
+yahoojapan/JGLUE がソースなのだが jsts-v1.3 にアップデートして v1.1 を消したみたいだ。
+
+<https://huggingface.co/datasets/shunk031/JGLUE> が間に入ってる。
+こいつがGitHub上のファイルを Commit ID やタグベースではなく
+main ブランチベースで指定しているのが原因らしい。
+
+~/.cache/hugging-face/datasets/downloads 内の該当しそうな箇所を以下のURLに訂正して実行してみる。一応、実行できた。
+
+*   <https://raw.githubusercontent.com/yahoojapan/JGLUE/refs/tags/v1.1.0/datasets/jsts-v1.1/train-v1.1.json>
+*   <https://raw.githubusercontent.com/yahoojapan/JGLUE/refs/tags/v1.1.0/datasets/jsts-v1.1/valid-v1.1.json>
+
+その結果:
+
+*   [EB/JSTS result](./results/google__embeddinggemma-300m/no_revision_available/JSTS.json)
+*   [QE/JSTS result](./results/QWen__QWen3-Embedding-0.6B/no_revision_available/JSTS.json)
+
+おおよそJSICKと変わらないスコア傾向。
+
+STS16STS も実行してみる。
+
+```console
+$ mteb run -m 'google/embeddinggemma-300m' -t STS16
+
+$ mteb run -m 'QWen/QWen3-Embedding-0.6B' -t STS16
+```
+
+*   [EB/STS16 result](./results/google__embeddinggemma-300m/no_revision_available/STS16.json)
+*   [QE/STS16 result](./results/QWen__QWen3-Embedding-0.6B/no_revision_available/STS16.json)
+
+### ベンチマークの中身
+
+SpeeedTaskから。実装は [AbsTaskSpeedTask](https://github.com/embeddings-benchmark/mteb/blob/6e72dc0e30577c2fde2bb5c6cb55c79bf8e1eaec/mteb/abstasks/AbsTaskSpeedTask.py#L22)
+
+43のデータを7回 encode してかかった時間を記録して統計データを取っている。
+EBとQEで中央値でEBのほうが3倍速い。
+
+JSICKとSICK-R はどちらも [AbsTaskSTS](https://github.com/embeddings-benchmark/mteb/blob/6e72dc0e30577c2fde2bb5c6cb55c79bf8e1eaec/mteb/abstasks/AbsTaskSTS.py) ベースで、データ数が違うだけ。
+評価は [STSEvaluator](https://github.com/embeddings-benchmark/mteb/blob/6e72dc0e30577c2fde2bb5c6cb55c79bf8e1eaec/mteb/evaluation/evaluators/STSEvaluator.py) でやってる。
+ペアとなる文章のembeddingを求めて、その間の複数の距離を求めてる。
+STS (Semantic Textual Similarity) そんな感じか。
+
+JSICKの生データ <https://github.com/verypluming/JSICK>
+
+embeddingの距離と実際のスコアとの関係を、以下の相関関数で評価している。
+
+*   [ピアソンの積率相関係数](https://ja.wikipedia.org/wiki/%E3%83%94%E3%82%A2%E3%82%BD%E3%83%B3%E3%81%AE%E7%A9%8D%E7%8E%87%E7%9B%B8%E9%96%A2%E4%BF%82%E6%95%B0)
+*   [スピアマンの順位相関係数](https://ja.wikipedia.org/wiki/%E3%82%B9%E3%83%94%E3%82%A2%E3%83%9E%E3%83%B3%E3%81%AE%E9%A0%86%E4%BD%8D%E7%9B%B8%E9%96%A2%E4%BF%82%E6%95%B0)
+
+Banking77Classification は AbsTaskClassification で中身は kNNClassificationEvaluator ということはほぼほぼ k-NN 要素。embeddingで与えられた距離でk-NNして、理想にどれだけ近いかを測ってる。
+
+### Second touchのまとめ
+
+*   GPUはCPUの約16倍速いので可能ならGPUを使うべし
+*   精度は QWen3-Embedding-0.6B の方が良いが、パフォーマンスはEmbedding Gemmaのほうが約2.5倍良い。メモリ量はQWen3は2倍
+*   日本語だから特に良い or 悪いという傾向はみられなかった。データセット依存の部分が大きいので、データセットの言語の違いを検証ででいるほどではない
+*   MTEBはモデル間の性能を見るモノ
+*   FP16で0.6GB vs 1.2GB になり、さらに x3 ぐらいかな?

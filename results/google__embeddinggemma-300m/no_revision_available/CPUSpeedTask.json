@@ -1,0 +1,38 @@
+{
+  "dataset_revision": "1.0",
+  "task_name": "CPUSpeedTask",
+  "mteb_version": "1.36.15",
+  "scores": {
+    "test": [
+      {
+        "time_mean": 8.467891,
+        "time_std": 0.244507,
+        "timings": [
+          8.224475,
+          8.055986,
+          8.840538,
+          8.602291,
+          8.387525,
+          8.586928,
+          8.577492
+        ],
+        "avg_words_per_sec": 429.032466,
+        "platform": "Windows",
+        "platform_release": "11",
+        "platform_version": "10.0.26100",
+        "architecture": "AMD64",
+        "processor": "Intel64 Family 6 Model 158 Stepping 12, GenuineIntel",
+        "ram": "64 GB",
+        "physical_cores": 8,
+        "total_cores": 16,
+        "main_score": 429.032466,
+        "hf_subset": "default",
+        "languages": [
+          "eng-Latn"
+        ]
+      }
+    ]
+  },
+  "evaluation_time": 59.686532735824585,
+  "kg_co2_emissions": null
+}
