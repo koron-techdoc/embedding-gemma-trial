@@ -483,3 +483,86 @@ Banking77Classification は AbsTaskClassification で中身は kNNClassification
 *   日本語だから特に良い or 悪いという傾向はみられなかった。データセット依存の部分が大きいので、データセットの言語の違いを検証ででいるほどではない
 *   MTEBはモデル間の性能を見るモノ
 *   FP16で0.6GB vs 1.2GB になり、さらに x3 ぐらいかな?
+
+## Third touch
+
+*   EmbeddingGemmaを実アプリで使うことを考える
+    *   llama.cpp で良いんじゃない?
+    *   [Java wrapper](https://github.com/kherud/java-llama.cpp) もあるけど、実用的じゃないかも
+    *   実行方法やパフォーマンスは?
+
+llama.cpp は b6653 が最新だった。
+
+GGUFフォーマットモデルは [ggml-org/embeddinggemma-300M-GGUF](https://huggingface.co/ggml-org/embeddinggemma-300M-GGUF) で良さそう。
+シンプルな使い方が記載されている。
+
+```
+llama-server -hf ggml-org/embeddinggemma-300M-GGUF --embeddings
+```
+
+モデルはWindowsだと `AppData\Local\llama.cpp` にダウンロードされた。
+また自動でGPUを使うようにロードされた。
+
+```
+curl --request POST \
+    --url http://localhost:8080/embedding \
+    --header "Content-Type: application/json" \
+    --data '{"input": "Hello embeddings"}' \
+    --silent
+```
+
+アクセスは [OpenAPI の Embeddings endpoint](https://platform.openai.com/docs/api-reference/embeddings) にほぼ準拠するらしい。
+`input` 要素に文字列もしくは文字列の配列を受け付ける。
+
+### パフォーマンス測定
+
+MTEB の [SpeedTask の例文](https://github.com/embeddings-benchmark/mteb/blob/6e72dc0e30577c2fde2bb5c6cb55c79bf8e1eaec/mteb/abstasks/the_ugly_duckling.txt)と同等の[入力を作成](the_ugly_duckling.json)し、それでパフォーマンスを測定してみる。
+
+```console
+$ time curl -X POST -d @the_ugly_duckling.json -H 'Content-Type: application/json' --silent http://localhost:8080/embedding -o tmp/out.json
+
+real    0m0.772s
+user    0m0.015s
+sys     0m0.015s
+```
+
+1回の実行にかかる時間は0.77～0.81秒。
+MTEBの方は7回実行して約3.8秒なので、1回当たり約0.54。
+最大0.3秒くらいのオーバーヘッドがある換算だが、まぁそんなもんかな?という感じ。
+
+25行、50行、100行のデータを作って計測してみる。
+各データごとに5回づつ計測。単位は秒
+
+|    | 25    | 50    | 100 
+|----|------:|------:|------:
+|#1  | 0.496 | 0.716 | 1.146
+|#2  | 0.484 | 0.689 | 1.144
+|#3  | 0.497 | 0.704 | 1.125
+|#4  | 0.490 | 0.686 | 1.116
+|#5  | 0.480 | 0.741 | 1.161
+|Avg.| 0.489 | 0.707 | 1.138
+
+どうもワームアップがあるようで間隔を短くして投げると速いかも?
+元々の43行のデータは0.64～0.67秒くらいになる。
+0.1秒のオーバーヘッド考えると納得度は増す。
+
+行数に対する応答性はほぼ線形。
+約0.28秒の固定オーバーヘッド + 1行あたり 約8.4ms くらい。
+
+CPUでも同じことをやってみると… 43行で約4.678秒。
+GPUの約8倍くらいの時間がかかっている。
+MTEBのCPUSpeedTaskよりは速いが、llama.cppのCPU実装が優秀という理解で良いだろう。
+
+CPUは25行で2.95秒、50行で5.30秒くらい。 
+約0.6秒の固定オーバーヘッドに1行あたり約 94ms といったところ。
+
+### キャッシュ
+
+<https://github.com/ggml-org/llama.cpp/pull/7826>
+
+- `$LLAMA_CACHE` if defined,
+- `~/Library/Caches/llama.cpp/` on Mac,
+- `~/.cache/llama.cpp` on Linux (or `$XDG_CACHE_HOME/llama.cpp` if defined)
+- `%LOCALAPPDATA%\llama.cpp` on Windows
+
+ということで環境変数 `$LLAMA_CACHE` を設定すれば任意の場所に変更できそう。
