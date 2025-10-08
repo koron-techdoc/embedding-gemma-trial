@@ -571,7 +571,7 @@ CPUは25行で2.95秒、50行で5.30秒くらい。
 
 [./proximity](./proximity) で実験中。
 
-都道府県庁所在地の位置を教師データとし、
+[都道府県庁所在地の位置](https://gist.github.com/ctsaran/42728dad3c7d8bd91f1d) を教師データとし、
 都道府県名から得た embedding 同士間の距離のTop-K (近い順)を比較する。
 
 物理的に近いもの同士が embedding 間でも近くなるように学習を掛ける。
