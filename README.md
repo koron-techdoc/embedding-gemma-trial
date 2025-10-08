@@ -566,3 +566,21 @@ CPUは25行で2.95秒、50行で5.30秒くらい。
 - `%LOCALAPPDATA%\llama.cpp` on Windows
 
 ということで環境変数 `$LLAMA_CACHE` を設定すれば任意の場所に変更できそう。
+
+## Fourth touch (WIP)
+
+[./proximity](./proximity) で実験中。
+
+都道府県庁所在地の位置を教師データとし、
+都道府県名から得た embedding 同士間の距離のTop-K (近い順)を比較する。
+
+物理的に近いもの同士が embedding 間でも近くなるように学習を掛ける。
+その学習前後の Top-K accuracy を比較して評価するという算段。
+
+embeddingの計算には clustering タスクを用いた。
+プロンプトは `task: clustering | query: `
+
+ユークリッド距離。コサイン距離は未確認。
+未学習の状態では、特に字面が近いものが近傍になるようだった。
+また概念的な近さも一部考慮されることがあるようだ。
+例えば北海道と沖縄が近いなど。
