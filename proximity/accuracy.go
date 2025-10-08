@@ -49,7 +49,7 @@ func run(base, target string) error {
 		return err
 	}
 	a := accrary(mat0, mat1)
-	fmt.Printf("Top-K accurary: %f\n", a)
+	fmt.Printf("Top-K accuracy: %f\n", a)
 	return nil
 }
 
