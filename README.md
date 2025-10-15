@@ -600,8 +600,8 @@ accuracyは学習前後で 0.23 から 0.72 に改善した。
 しかし市区町村や住所のTop-Kは学習後のほうが悪くなった。
 下手に学習させたことで元々持っていたクラスタリング能力を失ったと考えられる。
 
-* [学習前 Top-K のクエリー](.\proximity\topk_queries0.log)
-* [学習後 Top-K のクエリー](.\proximity\topk_queries1.log)
+* [学習前 Top-K のクエリー](./proximity/topk_queries0.log)
+* [学習後 Top-K のクエリー](./proximity/topk_queries1.log)
 
 ある意味で学習が進んだことを示しているが、都道府県間の距離関係を学習させるのは有用な学習ではない。
 
