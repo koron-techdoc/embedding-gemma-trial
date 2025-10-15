@@ -1,6 +1,13 @@
-import csv
+#!/usr/bin/env python
+
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+##############################################################################
 
 def load_prefectures(file='prefectures.tsv'):
+    import csv
     out = []
     with open(file, 'r', newline='', encoding='utf-8') as file:
         reader = csv.reader(file, delimiter='\t')
@@ -9,15 +16,27 @@ def load_prefectures(file='prefectures.tsv'):
                 out.append(row[1])
     return out
 
-from sentence_transformers import SentenceTransformer
+def load_model(model_id='google/embeddinggemma-300m'):
+    from sentence_transformers import SentenceTransformer
+    return SentenceTransformer(model_id, device='cuda')
 
-model = SentenceTransformer("google/embeddinggemma-300m", device='cuda')
+if __name__ == '__main__':
+    import argparse
+    import sys, io
 
-documents = load_prefectures()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-m', '--model', help='model ID or directory', default='google/embeddinggemma-300m')
+    args = parser.parse_args()
 
-embeddings = model.encode(documents, prompt="task: clustering | query: ")
+    model_id = args.model
 
-with open('embeddings.txt', 'w', encoding='utf-8') as wf:
+    task_name = 'Clustering'
+    documents = load_prefectures()
+    model = load_model(model_id)
+    embeddings = model.encode(documents, prompt=model.prompts[task_name])
+
+    wf = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
     index = 0
     for pref in documents:
         wf.write(f'{index+1}\t{pref}')

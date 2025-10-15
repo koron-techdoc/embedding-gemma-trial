@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	top           = 0
+	top           = 10
 	out io.Writer = os.Stdout
 )
 
@@ -43,7 +43,7 @@ func run(name string) error {
 }
 
 func main() {
-	flag.IntVar(&top, "top", 0, "show only cloesest top K (default: 0 = all)")
+	flag.IntVar(&top, "top", top, "show only cloesest top K (default: 0 = all)")
 	flag.Parse()
 
 	name := flag.Arg(0)

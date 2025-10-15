@@ -584,3 +584,6 @@ embeddingの計算には clustering タスクを用いた。
 未学習の状態では、特に字面が近いものが近傍になるようだった。
 また概念的な近さも一部考慮されることがあるようだ。
 例えば北海道と沖縄が近いなど。
+
+./train.py で学習。 pref-embedding-gemma を出力。
+`pip install 'accelerate>=0.26.0` で学習用のモジュールのインストールが必要。
