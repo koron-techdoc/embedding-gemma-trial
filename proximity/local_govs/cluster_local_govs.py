@@ -8,12 +8,19 @@ import csv
 import numpy as np
 
 class Prefecture:
-    def __init__(self, name, embeddings):
+    def __init__(self, name, embedding):
         self.name = name
-        self.embeddings = np.array(embeddings)
+        self.embedding = np.array(embedding)
 
     def distance(self, embedding):
-        return np.linalg.norm(np.array(embedding) - self.embeddings)
+        return np.linalg.norm(np.array(embedding) - self.embedding)
+
+    def cos_distance(self, embedding):
+        v1 = self.embedding
+        v2 = np.array(embedding)
+        norm1 = np.linalg.norm(v1)
+        norm2 = np.linalg.norm(v2)
+        return 1 - (np.dot(v1, v2) / (norm1 * norm2))
 
     @staticmethod
     def load(file):
