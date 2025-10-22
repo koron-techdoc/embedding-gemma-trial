@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/csv"
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -108,7 +109,11 @@ func Run(name string) error {
 }
 
 func main() {
+	flag.Parse()
 	name := "accuracy_full.txt"
+	if flag.NArg() > 0 {
+		name = flag.Arg(0)
+	}
 	err := Run(name)
 	if err != nil {
 		log.Fatal(err)

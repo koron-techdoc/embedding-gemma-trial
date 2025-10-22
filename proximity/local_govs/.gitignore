@@ -3,3 +3,5 @@ truth_*.txt
 accuracy_*.txt
 
 train_*.tsv
+
+trained-lgov-*/

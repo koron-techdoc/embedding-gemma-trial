@@ -30,6 +30,18 @@ class Prefecture:
                 prefs.append(Prefecture(row[1], list(map(float, row[2:]))))
         return prefs
 
+    @staticmethod
+    def generate(model, file):
+        names = []
+        with open(file, 'r', newline='', encoding='utf-8') as file:
+            for row in csv.reader(file, delimiter='\t'):
+                names.append(row[1])
+        embeddings = model.encode(names, prompt=model.prompts['Clustering'])
+        prefs = []
+        for i in range(len(names)):
+            prefs.append(Prefecture(names[i], embeddings[i]))
+        return prefs
+
 class LocalGov:
     def __init__(self, name, prefs):
         self.name = name
@@ -86,14 +98,14 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--model', help='model ID or directory', default='google/embeddinggemma-300m')
-    parser.add_argument('-p', '--prefecture', help='prefecture embeddings', default='../embeddings.txt')
+    parser.add_argument('-p', '--prefecture', help='prefecture list', default='../prefectures.tsv')
     parser.add_argument('-l', '--localgovs', help='local goverments', default='./truth_full.txt')
     parser.add_argument('-b', '--batchsize', help='batch size', default=100)
     args = parser.parse_args()
 
     govs = LocalGov.load(args.localgovs)
-    prefs = Prefecture.load(args.prefecture)
     model = load_model(args.model)
+    prefs = Prefecture.generate(model, args.prefecture)
 
     acc = calc_accuracy(model, prefs, govs, batch_size=int(args.batchsize))
     print()

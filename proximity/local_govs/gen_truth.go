@@ -52,7 +52,7 @@ func run(name string) error {
 	// Show duplication
 	for name, codes := range name2codes {
 		fmt.Printf("%s", name)
-		for _, code :=range codes {
+		for _, code := range codes {
 			fmt.Printf("\t%s", lgovs[code].Prefecture)
 		}
 		fmt.Println()
