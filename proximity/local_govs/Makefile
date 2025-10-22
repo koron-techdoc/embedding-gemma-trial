@@ -1,4 +1,4 @@
-all: accuracy_full.txt accuracy_partial.txt
+all: train_full.tsv train_partial.tsv
 
 truth_full.txt: local_govs_full.tsv
 	go run ./gen_truth.go $< > $@
@@ -11,3 +11,9 @@ accuracy_full.txt: truth_full.txt
 
 accuracy_partial.txt: truth_partial.txt
 	./cluster_local_govs.py -l $< > $@
+
+train_full.tsv: accuracy_full.txt
+	go run ./gen_train.go $< > $@
+
+train_partial.tsv: accuracy_partial.txt
+	go run ./gen_train.go $< > $@

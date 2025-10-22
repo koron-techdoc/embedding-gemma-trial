@@ -70,10 +70,10 @@ def calc_accuracy(model, prefs, govs, batch_size=100):
         for j in range(len(chunk)):
             g = chunk[j]
             k = len(g.prefs)
-            tops = calc_top_k(embeddings[j], prefs, k=k)
+            tops = calc_top_k(embeddings[j], prefs, k=k*2)
             top_names = [ e['name'] for e in tops ]
-            count = count_matching(g.prefs, top_names)
-            print(f'{g.name}\t{count}\t{"\t".join(top_names)}')
+            count = count_matching(g.prefs, top_names[:k])
+            print(f'{g.name}\t{count}/{k}\t{",".join(top_names[:k])}\t{",".join(top_names[k:])}\t{",".join(g.prefs)}')
 
             total += k
             match += count
