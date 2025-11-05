@@ -13,3 +13,7 @@ embedding には google/embeddinggemma-300m を用いる
 3. accuracy を求める
 
 前段のクラスタリング結果から学習データを作って学習し、再度計測し、accuracy の変化をみる。
+
+## 派生: 城のクラスタリング
+
+参照: [城のクラスタリング結果](./report_castles.md)
