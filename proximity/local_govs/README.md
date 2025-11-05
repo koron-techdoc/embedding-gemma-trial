@@ -18,3 +18,4 @@ embedding には google/embeddinggemma-300m を用いる
 
 -   [城のクラスタリング結果](./report_castles.md)
 -   [旧国名のクラスタリング結果](./report_old_countries.md)
+-   [JR駅名のクラスタリング結果](./report_jr_stations.md)
