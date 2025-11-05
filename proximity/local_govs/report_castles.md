@@ -94,4 +94,8 @@ $ ./cluster_local_govs.py -l ./japan_castles.tsv -m ./trained-lgov-partial/check
 accuracy: 0.9166666666666666
 ```
 
-## 旧国名
+## 検討・考察
+
+何か学習データに与えた以上の概念を使っているように思われる。
+
+[旧国名でのクラスタリング](./report_old_countries.md)を行ってみよう。
