@@ -31,12 +31,12 @@ Qwen3 Embedding 0.6B (以下Qwen3) は、queryとdocumentの2タスクしかな�
 
         ./cluster_local_govs.py -m QWen/Qwen3-Embedding-0.6B -k document > ./QWen3/pretrained-accuracy.txt
 
-    [学習前のクラスタリング結果](./Qwen3/pretrained-accuracy.txt)
+    [学習前のクラスタリング結果](./QWen3/pretrained-accuracy.txt)
 2. 学習用データ作成
 
         go run ./gen_train.go ./QWen3/pretrained-accuracy.txt > ./QWen3/train.tsv
 
-    [学習用データの詳細](./Qwen3/train.tsv)
+    [学習用データの詳細](./QWen3/train.tsv)
 
 3. 学習を実行
 
