@@ -611,11 +611,13 @@ accuracyは学習前後で 0.23 から 0.72 に改善した。
 
 ## Prompts in the models
 
+モデルに組み込まれたプロンプトを確認した。
+
+* [EmbeddingGemma 300M](./results/prompts/embeddinggemma-300m.tsv)
+* [Qwen3 Embedding 0.6B](./results/prompts/Qwen3-Embedding-0.6B.tsv)
+
 ```console
 $ ./bin/show_prompts.py > ./results/prompts/embeddinggemma-300m.tsv
 
 $ ./bin/show_prompts.py -m Qwen/Qwen3-Embedding-0.6B > ./results/prompts/Qwen3-Embedding-0.6B.tsv
 ```
-
-* [EmbeddingGemma 300M](./results/prompts/embeddinggemma-300m.tsv)
-* [Qwen3 Embedding 0.6B](./results/prompts/Qwen3-Embedding-0.6B.tsv)

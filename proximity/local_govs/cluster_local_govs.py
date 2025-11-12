@@ -7,6 +7,8 @@ logger = logging.getLogger(__name__)
 import csv
 import numpy as np
 
+PROMPT_KEY = 'Clustering'
+
 class Prefecture:
     def __init__(self, name, embedding):
         self.name = name
@@ -36,7 +38,7 @@ class Prefecture:
         with open(file, 'r', newline='', encoding='utf-8') as file:
             for row in csv.reader(file, delimiter='\t'):
                 names.append(row[1])
-        embeddings = model.encode(names, prompt=model.prompts['Clustering'])
+        embeddings = model.encode(names, prompt=model.prompts[PROMPT_KEY])
         prefs = []
         for i in range(len(names)):
             prefs.append(Prefecture(names[i], embeddings[i]))
@@ -69,8 +71,6 @@ def calc_top_k(embedding, prefs, k=10):
 def count_matching(a, b):
     return len(set(a) & set(b))
 
-task_name = 'Clustering'
-
 def calc_accuracy(model, prefs, govs, batch_size=100):
     total = 0.0
     match = 0.0
@@ -78,7 +78,7 @@ def calc_accuracy(model, prefs, govs, batch_size=100):
     for i in range(0, len(govs), batch_size):
         chunk = govs[i:i + batch_size]
         names = [ g.name for g in chunk ]
-        embeddings = model.encode(names, prompt=model.prompts['Clustering'])
+        embeddings = model.encode(names, prompt=model.prompts[PROMPT_KEY])
         for j in range(len(chunk)):
             g = chunk[j]
             k = len(g.prefs)
@@ -100,8 +100,11 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--model', help='model ID or directory', default='google/embeddinggemma-300m')
     parser.add_argument('-p', '--prefecture', help='prefecture list', default='../prefectures.tsv')
     parser.add_argument('-l', '--localgovs', help='local goverments', default='./truth_full.txt')
+    parser.add_argument('-k', '--promptkey', help='prompt key', default='Clustering')
     parser.add_argument('-b', '--batchsize', help='batch size', default=100)
     args = parser.parse_args()
+
+    PROMPT_KEY = args.promptkey
 
     govs = LocalGov.load(args.localgovs)
     model = load_model(args.model)

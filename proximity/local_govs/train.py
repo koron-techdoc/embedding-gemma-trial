@@ -7,19 +7,20 @@ logger = logging.getLogger(__name__)
 import argparse
 
 parser = argparse.ArgumentParser()
+parser.add_argument('-m', '--model', help='model ID or directory', default='google/embeddinggemma-300m')
 parser.add_argument('-t', '--traindata', help='training data', default='train_full.tsv')
 parser.add_argument('-o', '--outdir', help='output model directory', default='trained-lgov-full')
+parser.add_argument('-k', '--promptkey', help='prompt key', default='Clustering')
+parser.add_argument('-b', '--batchsize', help='batch size', default=100)
 args = parser.parse_args()
 
+MODEL_ID = args.model
 TRAIN_DATA = args.traindata
 OUTPUT_MODEL_DIR = args.outdir
+PROMPT_KEY = args.promptkey
 EPOCHS = 5
-BATCH_SIZE = 100
+BATCH_SIZE = int(args.batchsize)
 LEARNING_RATE = 2e-5
-
-# MAGIC NUMBER
-SAVE_STEPS = 20
-LOGGING_STEPS = 20
 
 ##############################################################################
 
@@ -48,14 +49,11 @@ logger.info(f'Transformed the dataset for training: {train_dataset}')
 import torch
 from sentence_transformers import SentenceTransformer
 
-model_id = 'google/embeddinggemma-300M'
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = SentenceTransformer(model_id).to(device=device)
+model = SentenceTransformer(MODEL_ID).to(device=device)
 logger.info(f'Loaded the model: {model}')
 
 ##############################################################################
-
-task_name = 'Clustering'
 
 from sentence_transformers import SentenceTransformerTrainer, SentenceTransformerTrainingArguments
 from sentence_transformers.losses import MultipleNegativesRankingLoss
@@ -63,18 +61,20 @@ from transformers import TrainerCallback
 
 loss = MultipleNegativesRankingLoss(model)
 
+logging_steps = int(len(train_dataset) / BATCH_SIZE + 0.5)
+
 args = SentenceTransformerTrainingArguments(
     # Required parameter:
     output_dir=OUTPUT_MODEL_DIR,
     # Optional training parameters:
-    prompts=model.prompts[task_name],    # use model's prompt to train
+    prompts=model.prompts[PROMPT_KEY],    # use model's prompt to train
     num_train_epochs=EPOCHS,
     per_device_train_batch_size=BATCH_SIZE,
     learning_rate=LEARNING_RATE,
     warmup_ratio=0.1,
     # Optional tracking/debugging parameters:
-    save_steps=SAVE_STEPS,
-    logging_steps=LOGGING_STEPS,
+    save_steps=logging_steps,
+    logging_steps=logging_steps,
     report_to='none',
 )
 
