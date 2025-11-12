@@ -608,3 +608,14 @@ accuracyは学習前後で 0.23 から 0.72 に改善した。
 次は「市区町村(自治体)名を都道府県でクラスタリングする」という問題設定で検証すべきかもしれない。
 ただそうなると学習の実験ではなく、モデルの妥当性検証に相当する。
 もしくはタスクプロンプトを変えると言うことでも良いかも。
+
+## Prompts in the models
+
+```console
+$ ./bin/show_prompts.py > ./results/prompts/embeddinggemma-300m.tsv
+
+$ ./bin/show_prompts.py -m Qwen/Qwen3-Embedding-0.6B > ./results/prompts/Qwen3-Embedding-0.6B.tsv
+```
+
+* [EmbeddingGemma 300M](./results/prompts/embeddinggemma-300m.tsv)
+* [Qwen3 Embedding 0.6B](./results/prompts/Qwen3-Embedding-0.6B.tsv)
