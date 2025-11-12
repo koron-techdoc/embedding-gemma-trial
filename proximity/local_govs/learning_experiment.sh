@@ -8,8 +8,8 @@ OUTDIR=./EmbeddingGemma
 MODEL=google/embeddinggemma-300m
 PROMPT=Clustering
 BATCHSIZE=25
-
 TRUTH="./truth_full.txt"
+
 ACCURACY_000="${OUTDIR}/accuracy-trained-000.txt"
 TRAIN_DATA="${OUTDIR}/training_data.tsv"
 MODEL_OUTDIR="${OUTDIR}/trained_model"
