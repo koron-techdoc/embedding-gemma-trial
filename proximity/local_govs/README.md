@@ -350,3 +350,30 @@ EmbeddingGemma でバッチサイズを25に落として追試すれば比較・
 ただ学習の取り回しの良さ、
 および学習の効果の傾向が大きくは変わらない
 という観点からは EmbeddingGemma のほうがより扱いやすい。
+
+## EmbeddingGemmaをバッチサイズ25で学習
+
+全体的にバッチサイズが100だった時よりもわずか (0.01～0.02ポイント) Accuracy が下がっている。
+QWen3は 0.1 ポイント低下していたので、バッチサイズの影響はそれに比べて1/10程度と、大きくない。
+
+```
+$ ./learning_experiment.sh
+
+$ grep -nr accuracy: EmbeddingGemma/*.txt
+EmbeddingGemma/accuracy-trained-000.txt:accuracy: 0.12773722627737227
+EmbeddingGemma/accuracy-trained-020.txt:accuracy: 0.3607924921793535
+EmbeddingGemma/accuracy-trained-040.txt:accuracy: 0.5813347236704901
+EmbeddingGemma/accuracy-trained-060.txt:accuracy: 0.7773722627737226
+EmbeddingGemma/accuracy-trained-080.txt:accuracy: 0.8957247132429614
+EmbeddingGemma/accuracy-trained-100.txt:accuracy: 0.9457768508863399
+EmbeddingGemma/result-castle-000.txt:accuracy: 0.08333333333333333
+EmbeddingGemma/result-castle-100.txt:accuracy: 0.75
+EmbeddingGemma/result-jreki-000.txt:accuracy: 0.04351830531890399
+EmbeddingGemma/result-jreki-100.txt:accuracy: 0.2816025788625374
+EmbeddingGemma/result-jrstation-000.txt:accuracy: 0.04167626064932074
+EmbeddingGemma/result-jrstation-100.txt:accuracy: 0.27814874510706883
+EmbeddingGemma/result-oldcountry-000.txt:accuracy: 0.03529411764705882
+EmbeddingGemma/result-oldcountry-100.txt:accuracy: 0.611764705882353
+```
+
+*   [実験用スクリプト](./learning_experiment.sh)
